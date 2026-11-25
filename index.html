@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#16834a">
+<title>Kasir Toko Serba Ada</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--green:#16834a;--dark:#123b28;--bg:#f3f7f4;--line:#dce7df}
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,Arial;background:var(--bg);color:#17251c}
+header{background:var(--green);color:white;padding:18px 16px;position:sticky;top:0;z-index:2}
+header h1{font-size:20px;margin:0}header p{margin:3px 0 0;font-size:12px;opacity:.9}
+main{max-width:900px;margin:auto;padding:14px}
+nav{display:flex;gap:8px;overflow:auto;margin-bottom:14px}
+nav button,.btn{border:0;border-radius:10px;padding:11px 14px;background:var(--green);color:white;font-weight:650}
+nav button{background:#e1eee5;color:var(--dark);white-space:nowrap}nav button.active{background:var(--green);color:white}
+.card{background:white;border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 8px #123b2809}
+h2{font-size:18px;margin:0 0 12px}.muted{color:#64746a;font-size:12px}
+input,select{width:100%;padding:11px;border:1px solid #cbd8ce;border-radius:9px;font:inherit;background:white}
+label{display:block;font-size:13px;font-weight:650;margin:9px 0 5px}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.product{border:1px solid var(--line);border-radius:11px;padding:11px;background:#fff;text-align:left;color:inherit}
+.product b{display:block}.product small{color:#607267}.product strong{display:block;color:var(--green);margin-top:7px}
+.item{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border:0}.item button{border:0;background:#fbe9e7;color:#a22;border-radius:7px;padding:5px 9px}
+.total{font-size:22px;font-weight:800;color:var(--green)}
+.hidden{display:none!important}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1}
+button:disabled{opacity:.45}.notice{background:#fff6dc;border:1px solid #f0dda2;padding:10px;border-radius:10px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+@media(min-width:650px){.products{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><h1>🛒 Toko Serba Ada</h1><p>Aplikasi kasir • penyimpanan lokal/offline</p></header>
+<main>
+<nav id="tabs">
+<button class="active" data-tab="kasir">Kasir</button><button data-tab="barang">Barang & Stok</button>
+<button data-tab="laporan">Laporan</button><button data-tab="pengaturan">Pengaturan</button>
+</nav>
+<section id="kasir">
+<div class="card"><h2>Pilih Barang</h2><input id="cari" placeholder="Cari nama barang..." autocomplete="off"><div class="products" id="daftarProduk" style="margin-top:10px"></div></div>
+<div class="card"><h2>Keranjang</h2><div id="keranjang"><p class="muted">Belum ada barang dipilih.</p></div>
+<div class="item"><b>Total</b><span class="total" id="total">Rp0</span></div>
+<label>Metode pembayaran</label><select id="metode"><option>Tunai</option><option>Transfer</option><option>QRIS</option></select>
+<label>Uang diterima (untuk tunai)</label><input id="bayar" type="number" inputmode="numeric" placeholder="Masukkan nominal">
+<div class="item"><b>Kembalian</b><b id="kembalian">Rp0</b></div>
+<div class="actions"><button class="btn" id="selesaikan">Selesaikan & Cetak</button><button class="btn" id="kosongkan" style="background:#65756b">Kosongkan</button></div>
+</div></section>
+<section id="barang" class="hidden">
+<div class="card"><h2>Tambah / Ubah Barang</h2><input type="hidden" id="editId">
+<label>Nama barang</label><input id="nama" placeholder="Contoh: Air mineral 600 ml">
+<div class="row"><div><label>Harga jual (Rp)</label><input id="harga" type="number" inputmode="numeric" placeholder="5000"></div><div><label>Stok</label><input id="stok" type="number" inputmode="numeric" placeholder="20"></div></div>
+<div class="actions" style="margin-top:12px"><button class="btn" id="simpanBarang">Simpan Barang</button><button class="btn" id="batalEdit" style="background:#65756b">Batal</button></div></div>
+<div class="card"><h2>Daftar Barang</h2><div id="tabelBarang"></div></div>
+</section>
+<section id="laporan" class="hidden"><div class="card"><h2>Ringkasan Penjualan</h2><div id="ringkasan"></div></div>
+<div class="card"><h2>Riwayat Transaksi</h2><div id="riwayat"></div></div></section>
+<section id="pengaturan" class="hidden">
+<div class="card"><h2>Printer Bluetooth</h2><p class="muted">Coba sambungkan printer thermal Bluetooth yang mendukung BLE. Dukungan berbeda-beda menurut tipe printer dan browser.</p><button class="btn" id="connectPrinter">Hubungkan Printer Bluetooth</button><p id="printerStatus" class="muted">Belum terhubung.</p></div>
+<div class="card"><h2>Backup & Sinkronisasi</h2><p class="notice">Data tersimpan di perangkat ini dan tetap bisa dipakai offline. Sinkronisasi antar-HP memerlukan server/database online yang akan disiapkan pada tahap berikutnya.</p>
+<div class="actions"><button class="btn" id="export">Unduh Backup Data</button><button class="btn" id="importBtn" style="background:#65756b">Pulihkan Backup</button><input id="fileImport" type="file" accept="application/json" class="hidden"></div>
+</div>
+<div class="card"><h2>Informasi</h2><p class="muted">Versi awal. Jangan hapus data browser sebelum membuat backup. Untuk instalasi seperti aplikasi, unggah folder ini ke hosting HTTPS lalu buka dari Chrome Android dan pilih “Tambahkan ke layar utama”.</p></div>
+</section>
+</main>
+<script>
+const KEY='tsa_pos_v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{products:[
+{id:1,name:'Air Mineral 600 ml',price:4000,stock:30},{id:2,name:'Mi Instan',price:3500,stock:40},
+{id:3,name:'Kopi Sachet',price:2000,stock:50},{id:4,name:'Gula 1 kg',price:17000,stock:12}
+],sales:[]};
+let cart=[],printer=null;
+const $=id=>document.getElementById(id);
+const rupiah=n=>'Rp'+Number(n||0).toLocaleString('id-ID');
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function renderProducts(){let q=$('cari').value.toLowerCase();$('daftarProduk').innerHTML=db.products.filter(p=>p.name.toLowerCase().includes(q)).map(p=>`<button class="product" data-add="${p.id}" ${p.stock<=0?'disabled':''}><b>${esc(p.name)}</b><small>Stok: ${p.stock}</small><strong>${rupiah(p.price)}</strong></button>`).join('')||'<p class="muted">Barang tidak ditemukan.</p>'}
+function renderCart(){let total=cart.reduce((s,x)=>s+x.price*x.qty,0);$('keranjang').innerHTML=cart.length?cart.map(x=>`<div class="item"><div><b>${esc(x.name)}</b><div class="muted">${rupiah(x.price)} × ${x.qty}</div></div><div><b>${rupiah(x.price*x.qty)}</b><br><button data-remove="${x.id}">Hapus</button></div></div>`).join(''):'<p class="muted">Belum ada barang dipilih.</p>';$('total').textContent=rupiah(total);calcChange()}
+function calcChange(){let t=cart.reduce((s,x)=>s+x.price*x.qty,0);$('kembalian').textContent=rupiah(Math.max(0,Number($('bayar').value||0)-t))}
+function renderInventory(){$('tabelBarang').innerHTML='<table><tr><th>Barang</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr>'+db.products.map(p=>`<tr><td>${esc(p.name)}</td><td>${rupiah(p.price)}</td><td>${p.stock}</td><td><button data-edit="${p.id}">Edit</button> <button data-del="${p.id}">Hapus</button></td></tr>`).join('')+'</table>'}
+function renderReports(){let sum=db.sales.reduce((s,x)=>s+x.total,0);$('ringkasan').innerHTML=`<p>Total transaksi: <b>${db.sales.length}</b></p><p class="total">${rupiah(sum)}</p><p class="muted">Total penjualan tersimpan di perangkat ini.</p>`;$('riwayat').innerHTML=db.sales.slice().reverse().map(s=>`<div class="item"><div><b>${new Date(s.date).toLocaleString('id-ID')}</b><div class="muted">${s.items.map(i=>esc(i.name)+' × '+i.qty).join(', ')} • ${s.method}</div></div><b>${rupiah(s.total)}</b></div>`).join('')||'<p class="muted">Belum ada transaksi.</p>'}
+function renderAll(){renderProducts();renderCart();renderInventory();renderReports()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('tabs').addEventListener('click',e=>{let b=e.target.closest('[data-tab]');if(!b)return;document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));['kasir','barang','laporan','pengaturan'].forEach(t=>$(t).classList.toggle('hidden',t!==b.dataset.tab))});
+$('cari').oninput=renderProducts;$('bayar').oninput=calcChange;
+$('daftarProduk').onclick=e=>{let b=e.target.closest('[data-add]');if(!b)return;let p=db.products.find(x=>x.id==b.dataset.add);if(!p||p.stock<1)return;let c=cart.find(x=>x.id===p.id);if(c){if(c.qty>=p.stock)return alert('Stok tidak cukup');c.qty++}else cart.push({...p,qty:1});renderCart()};
+$('keranjang').onclick=e=>{let b=e.target.closest('[data-remove]');if(b){cart=cart.filter(x=>x.id!=b.dataset.remove);renderCart()}};
+$('kosongkan').onclick=()=>{cart=[];renderCart()};
+$('simpanBarang').onclick=()=>{let name=$('nama').value.trim(),price=Number($('harga').value),stock=Number($('stok').value),id=$('editId').value;if(!name||price<=0||stock<0)return alert('Isi nama, harga, dan stok dengan benar.');if(id){Object.assign(db.products.find(p=>p.id==id),{name,price,stock})}else db.products.push({id:Date.now(),name,price,stock});['nama','harga','stok','editId'].forEach(x=>$(x).value='');save()};
+$('batalEdit').onclick=()=>['nama','harga','stok','editId'].forEach(x=>$(x).value='');
+$('tabelBarang').onclick=e=>{let id=e.target.dataset.edit||e.target.dataset.del;if(!id)return;let p=db.products.find(x=>x.id==id);if(e.target.dataset.edit){$('editId').value=p.id;$('nama').value=p.name;$('harga').value=p.price;$('stok').value=p.stock}else if(confirm('Hapus '+p.name+'?')){db.products=db.products.filter(x=>x.id!=id);save()}};
+$('selesaikan').onclick=()=>{if(!cart.length)return alert('Keranjang masih kosong.');let total=cart.reduce((s,x)=>s+x.price*x.qty,0),method=$('metode').value,pay=Number($('bayar').value||0);if(method==='Tunai'&&pay<total)return alert('Uang diterima kurang dari total.');for(let x of cart){let p=db.products.find(p=>p.id===x.id);if(!p||p.stock<x.qty)return alert('Stok '+x.name+' tidak cukup.')}for(let x of cart)db.products.find(p=>p.id===x.id).stock-=x.qty;let sale={id:Date.now(),date:new Date().toISOString(),items:cart.map(x=>({...x})),total,method,pay:method==='Tunai'?pay:total,change:method==='Tunai'?pay-total:0};db.sales.push(sale);cart=[];$('bayar').value='';save();printReceipt(sale);alert('Transaksi tersimpan.')};
+function receiptText(s){return 'TOKO SERBA ADA\\n'+new Date(s.date).toLocaleString('id-ID')+'\\n--------------------------\\n'+s.items.map(x=>x.name+' x'+x.qty+' '+rupiah(x.price*x.qty)).join('\\n')+'\\n--------------------------\\nTOTAL '+rupiah(s.total)+'\\nBayar '+s.method+': '+rupiah(s.pay)+'\\nKembali: '+rupiah(s.change)+'\\nTerima kasih!\\n\\n\\n'}
+function printReceipt(s){let w=window.open('','_blank','width=360,height=600');if(w){w.document.write('<pre style="font:14px monospace;white-space:pre-wrap">'+esc(receiptText(s))+'</pre>');w.document.close();w.print()}}
+$('connectPrinter').onclick=async()=>{if(!navigator.bluetooth){$('printerStatus').textContent='Browser ini tidak menyediakan Web Bluetooth. Coba Chrome Android dan printer BLE yang kompatibel.';return}try{printer=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:[]});$('printerStatus').textContent='Perangkat dipilih: '+printer.name+'. Pengiriman struk langsung perlu disesuaikan dengan protokol printer.'}catch(e){$('printerStatus').textContent='Koneksi dibatalkan atau tidak didukung: '+e.message}};
+$('export').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup-toko-serba-ada.json';a.click();URL.revokeObjectURL(a.href)};
+$('importBtn').onclick=()=>$('fileImport').click();
+$('fileImport').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let d=JSON.parse(await f.text());if(!Array.isArray(d.products)||!Array.isArray(d.sales))throw Error();if(confirm('Ganti data di perangkat ini dengan backup?')){db=d;save();alert('Backup dipulihkan.')}}catch(err){alert('File backup tidak valid.')}e.target.value=''};
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+renderAll();
+</script>
+</body></html>
